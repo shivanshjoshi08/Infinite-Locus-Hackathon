@@ -82,7 +82,7 @@ export default function Editor() {
   useEffect(() => {
     let s;
     try {
-      s = io("http://localhost:5000", {
+      s = io("https://infinite-locus-hackathon.onrender.com", {
         reconnectionAttempts: 3,
         timeout: 5000,
       });
