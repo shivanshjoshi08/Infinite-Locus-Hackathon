@@ -1,8 +1,0 @@
-{
-  "name": "infinite-locus-hackathon",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "build": "cd client && npm install && npm run build"
-  }
-}
