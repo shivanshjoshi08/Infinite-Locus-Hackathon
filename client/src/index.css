@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+/* Custom Quill Overrides */
+.editor-container .ql-container.ql-snow {
+  border: none !important;
+  font-family: inherit;
+}
+
+.editor-container .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background-color: #f9fafb !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 1rem !important;
+  border-top-left-radius: 0.125rem;
+  border-top-right-radius: 0.125rem;
+}
+
+.editor-container .ql-editor {
+  min-height: 10in;
+  padding: 4rem 1rem !important;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 640px) {
+  .editor-container .ql-editor {
+    padding: 1in !important;
+  }
+}
+
+/* Align Placeholder to match standard padding */
+.editor-container .ql-editor.ql-blank::before {
+  left: 1rem !important;
+  right: 1rem !important;
+  font-style: normal !important;
+}
+
+@media (min-width: 640px) {
+  .editor-container .ql-editor.ql-blank::before {
+    left: 1in !important;
+    right: 1in !important;
+  }
+}
+
+/* Custom Scrollbar for the main area */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
