@@ -89,7 +89,7 @@ export default function Editor() {
   useEffect(() => {
     let s;
     try {
-      s = io("https://infinite-locus-hackathon.onrender.com", {
+      s = io(import.meta.env.VITE_API_URL, {
         reconnectionAttempts: 3,
         timeout: 5000,
       });

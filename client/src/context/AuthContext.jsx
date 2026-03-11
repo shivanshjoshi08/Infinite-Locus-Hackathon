@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   // Axios instance
   const api = axios.create({
-    baseURL: "https://infinite-locus-hackathon.onrender.com/api",
+    baseURL: `${import.meta.env.VITE_API_URL}/api`,
   });
 
   api.interceptors.request.use((config) => {
