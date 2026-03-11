@@ -124,4 +124,58 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+const User = require("../models/User");
+
+// @route   POST api/documents/:id/share
+// @desc    Share a document with another user by email
+// @access  Private (owner only)
+router.post("/:id/share", authMiddleware, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
+
+  try {
+    const document = await Document.findById(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({ msg: "Document not found" });
+    }
+
+    // Only owner can share
+    if (document.owner.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "Only the document owner can share" });
+    }
+
+    // Find user by email
+    const userToShare = await User.findOne({ email: email.toLowerCase() });
+
+    if (!userToShare) {
+      return res.status(404).json({ msg: "No user found with that email" });
+    }
+
+    // Can't share with yourself
+    if (userToShare._id.toString() === req.user.id) {
+      return res.status(400).json({ msg: "You cannot share a document with yourself" });
+    }
+
+    // Check if already shared
+    if (document.sharedWith.includes(userToShare._id)) {
+      return res.status(400).json({ msg: "Document already shared with this user" });
+    }
+
+    document.sharedWith.push(userToShare._id);
+    await document.save();
+
+    res.json({ msg: `Document shared with ${userToShare.username}`, user: { username: userToShare.username, email: userToShare.email } });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Document not found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;

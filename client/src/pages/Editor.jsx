@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { AuthContext } from "../context/AuthContext";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Share2, X, Copy, Check } from "lucide-react";
 
 const icons = Quill.import("ui/icons");
 icons["undo"] = `<svg viewBox="0 0 18 18">
@@ -52,6 +52,13 @@ export default function Editor() {
   const [title, setTitle] = useState("Loading...");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Share modal state
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState("");
+  const [shareStatus, setShareStatus] = useState(null); // { type: 'success'|'error', msg: '' }
+  const [isSharing, setIsSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Native DOM Setup for Quill (100% crash proof from React 18 strict mode)
   const wrapperRef = useCallback((wrapper) => {
@@ -197,6 +204,29 @@ export default function Editor() {
     }
   };
 
+  // Share Document
+  const handleShare = async (e) => {
+    e.preventDefault();
+    if (!shareEmail.trim()) return;
+    setIsSharing(true);
+    setShareStatus(null);
+    try {
+      const res = await api.post(`/documents/${id}/share`, { email: shareEmail });
+      setShareStatus({ type: "success", msg: res.data.msg });
+      setShareEmail("");
+    } catch (err) {
+      setShareStatus({ type: "error", msg: err.response?.data?.msg || "Failed to share document" });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (error) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
@@ -245,15 +275,89 @@ export default function Editor() {
             className="w-full max-w-md rounded-md border border-transparent px-3 py-1.5 text-xl font-bold text-gray-900 hover:bg-gray-100 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
-        <div className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-50 border border-green-200 text-sm text-green-700 font-medium shadow-sm">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-          </span>
-          Connected
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            onClick={() => { setIsShareOpen(true); setShareStatus(null); setShareEmail(""); }}
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors"
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </button>
+          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-50 border border-green-200 text-sm text-green-700 font-medium shadow-sm">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            </span>
+            Connected
+          </div>
         </div>
       </header>
       
+      {/* Share Modal */}
+      {isShareOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Share Document</h2>
+              <button
+                onClick={() => setIsShareOpen(false)}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-1 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Copy Link */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Document Link</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={window.location.href}
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 bg-gray-50"
+                />
+                <button
+                  onClick={copyLink}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Invite by Email</label>
+              <form onSubmit={handleShare} className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="colleague@example.com"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSharing}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                >
+                  {isSharing ? "Sharing..." : "Share"}
+                </button>
+              </form>
+              {shareStatus && (
+                <p className={`mt-3 text-sm font-medium ${
+                  shareStatus.type === "success" ? "text-green-600" : "text-red-600"
+                }`}>
+                  {shareStatus.msg}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 overflow-y-auto bg-gray-100 py-8 flex justify-center px-4 sm:px-8 custom-scrollbar">
         <div className="w-full max-w-[8.5in] min-h-[11in] bg-white shadow-xl border border-gray-200 rounded-sm pb-16 relative">
           {/* This wrapper element is controlled entirely by Native Quill */}
