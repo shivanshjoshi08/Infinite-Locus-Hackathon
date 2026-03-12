@@ -39,22 +39,14 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // @route   GET api/documents/:id
-// @desc    Get document by ID
-// @access  Private
-router.get("/:id", authMiddleware, async (req, res) => {
+// @desc    Get document by ID (Public access via link)
+// @access  Public
+router.get("/:id", async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
 
     if (!document) {
       return res.status(404).json({ msg: "Document not found" });
-    }
-
-    // Check permissions
-    if (
-      document.owner.toString() !== req.user.id &&
-      !document.sharedWith.includes(req.user.id)
-    ) {
-      return res.status(401).json({ msg: "User not authorized" });
     }
 
     res.json(document);
@@ -68,23 +60,15 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // @route   PUT api/documents/:id
-// @desc    Update a document's title or content manually (Fallback, since socket handles real-time)
-// @access  Private
-router.put("/:id", authMiddleware, async (req, res) => {
+// @desc    Update a document's title or content manually (Public access via link)
+// @access  Public
+router.put("/:id", async (req, res) => {
   const { title, content } = req.body;
 
   try {
     let document = await Document.findById(req.params.id);
 
     if (!document) return res.status(404).json({ msg: "Document not found" });
-
-    // Ensure authorized
-    if (
-      document.owner.toString() !== req.user.id &&
-      !document.sharedWith.includes(req.user.id)
-    ) {
-      return res.status(401).json({ msg: "Not authorized" });
-    }
 
     if (title) document.title = title;
     if (content) document.content = content;

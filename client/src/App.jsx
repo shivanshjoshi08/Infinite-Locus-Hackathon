@@ -36,11 +36,7 @@ function App() {
           />
           <Route
             path="/documents/:id"
-            element={
-              <ProtectedRoute>
-                <Editor />
-              </ProtectedRoute>
-            }
+            element={<Editor />}
           />
         </Routes>
       </AuthProvider>
